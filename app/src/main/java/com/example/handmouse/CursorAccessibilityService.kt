@@ -3,6 +3,7 @@ package com.example.handmouse
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -52,11 +53,24 @@ class CursorAccessibilityService : AccessibilityService() {
 
     fun tap(x: Float, y: Float) {
         handler.post {
-            val path = Path().apply { moveTo(x, y) }
-            val gesture = GestureDescription.Builder()
-                .addStroke(GestureDescription.StrokeDescription(path, 0, 60))
-                .build()
-            dispatchGesture(gesture, null, null)
+            val dm = Resources.getSystem().displayMetrics
+            val w = dm.widthPixels.toFloat()
+            val h = dm.heightPixels.toFloat()
+            when {
+                y > h * 0.94f -> when {
+                    x < w / 3f -> performGlobalAction(GLOBAL_ACTION_RECENTS)
+                    x < w * 2f / 3f -> performGlobalAction(GLOBAL_ACTION_HOME)
+                    else -> performGlobalAction(GLOBAL_ACTION_BACK)
+                }
+                y < h * 0.03f -> performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
+                else -> {
+                    val path = Path().apply { moveTo(x, y) }
+                    val gesture = GestureDescription.Builder()
+                        .addStroke(GestureDescription.StrokeDescription(path, 0, 60))
+                        .build()
+                    dispatchGesture(gesture, null, null)
+                }
+            }
         }
     }
 
@@ -82,9 +96,15 @@ class CursorView(context: Context) : View(context) {
         strokeWidth = 6f
     }
 
+    private fun dirty() {
+        val r = 60f
+        invalidate((cx - r).toInt(), (cy - r).toInt(), (cx + r).toInt(), (cy + r).toInt())
+    }
+
     fun set(x: Float, y: Float, p: Boolean, s: Boolean) {
+        dirty()
         cx = x; cy = y; pinch = p; show = s
-        invalidate()
+        dirty()
     }
 
     override fun onDraw(canvas: Canvas) {

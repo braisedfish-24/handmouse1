@@ -30,8 +30,8 @@ import kotlin.math.min
 class HandTrackingService : LifecycleService() {
 
     private val margin = 0.15f
-    private val minAlpha = 0.08f
-    private val maxAlpha = 0.6f
+    private val minAlpha = 0.18f
+    private val maxAlpha = 0.85f
     private val pinchOn = 0.22f
     private val pinchOff = 0.32f
     private val cooldownMs = 300L
@@ -93,6 +93,7 @@ class HandTrackingService : LifecycleService() {
             val analysis = ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                .setTargetResolution(android.util.Size(320, 240))
                 .build()
             analysis.setAnalyzer(executor) { analyze(it) }
             provider.unbindAll()
